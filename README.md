@@ -64,6 +64,7 @@ A RESTful API for managing a product inventory system, built with Node.js, Expre
     # Polling for nodemon in Docker
     CHOKIDAR_USEPOLLING=true
     CHOKIDAR_INTERVAL=1000
+    STATIC_URL: "http://localhost:3000/uploads/"
     ```
 
 ## Running the Application

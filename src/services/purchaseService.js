@@ -3,6 +3,7 @@ import * as purchaseRepository from '../repositories/purchaseRepository.js';
 import * as productRepository from '../repositories/productRepository.js';
 import logger from '../utils/logger.js';
 
+// Create a new purchase
 export const createPurchase = async (userId, products) => {
     const transaction = await sequelize.transaction();
     try {
@@ -40,11 +41,9 @@ export const createPurchase = async (userId, products) => {
         };
 
         const purchase = await purchaseRepository.create(purchaseData, purchaseDetails, transaction);
-
         await transaction.commit();
 
         logger.info(`Compra realizada: ID ${purchase.id} - Usuario ${userId}`);
-
         return await purchaseRepository.findById(purchase.id);
 
     } catch (error) {
@@ -53,14 +52,17 @@ export const createPurchase = async (userId, products) => {
     }
 };
 
+// Get all purchases by user
 export const getMyPurchases = async (userId) => {
     return await purchaseRepository.findAllByUserId(userId);
 };
 
+// Get purchase by ID
 export const getPurchaseById = async (id, userId) => {
     return await purchaseRepository.findById(id, userId);
 };
 
+// Get all purchases (admin)
 export const getAllPurchases = async () => {
     return await purchaseRepository.findAll();
 };

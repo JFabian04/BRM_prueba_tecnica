@@ -1,6 +1,7 @@
 import { Product, Category, ProductImage } from '../models/index.js';
 import { Sequelize } from 'sequelize';
 
+// Fetch all active products with optional category inclusion and pagination
 export const findAll = async ({ page = 1, limit = 20, includeCategory = true } = {}) => {
   const offset = (Math.max(1, Number(page)) - 1) * Number(limit);
 
@@ -28,6 +29,7 @@ export const findAll = async ({ page = 1, limit = 20, includeCategory = true } =
   };
 };
 
+// Find a product by its ID, optionally including category and images
 export const findById = async (id, { includeCategory = true, includeImages = true } = {}) => {
   const include = [];
   if (includeCategory) include.push({ model: Category, as: 'category' });
@@ -35,10 +37,12 @@ export const findById = async (id, { includeCategory = true, includeImages = tru
   return await Product.findByPk(id, { include });
 };
 
+// Create a new product with provided data
 export const create = async (productData) => {
   return await Product.create(productData);
 };
 
+// Update an existing product by ID
 export const update = async (id, productData) => {
     const product = await Product.findByPk(id);
     if (product) {
@@ -47,6 +51,7 @@ export const update = async (id, productData) => {
     return null;
 };
 
+// Soft delete a product (set active = false)
 export const remove = async (id) => {
     const product = await Product.findByPk(id);
     if (product) {

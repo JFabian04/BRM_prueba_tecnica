@@ -41,6 +41,7 @@ services:
       PORT: 3000
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"
+      STATIC_URL: "http://localhost:3000/uploads/"
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs

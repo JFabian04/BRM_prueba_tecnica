@@ -3,12 +3,14 @@ import * as userRepository from '../repositories/userRepository.js';
 import config from '../config/config.js';
 import logger from '../utils/logger.js';
 
+// Generate a JWT token for a given user ID
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn
   });
 };
 
+// Register a new user and return both the user and JWT token
 export const registerUser = async (userData) => {
   const { name, email, password, role } = userData;
 
@@ -21,11 +23,12 @@ export const registerUser = async (userData) => {
 
   const token = generateToken(user.id);
 
-  logger.info(`Usuario registrado: ${user.email}`);
+  logger.info(`User registered: ${user.email}`);
 
   return { user, token };
 };
 
+// Authenticate a user by email and password, returning a JWT token if valid
 export const loginUser = async (credentials) => {
   const { email, password } = credentials;
 
@@ -43,7 +46,7 @@ export const loginUser = async (credentials) => {
 
   const token = generateToken(user.id);
 
-  logger.info(`Login exitoso: ${user.email}`);
+  logger.info(`Successful login: ${user.email}`);
 
   return { user, token };
 };

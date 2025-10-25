@@ -10,9 +10,9 @@ const startServer = async () => {
     await syncDatabase();
     
     app.listen(config.port, () => {
-      logger.info(`🚀 Server running on port ${config.port}`);
-      logger.info(`📝 Environment: ${config.nodeEnv}`);
-      logger.info(`🔗 Health: http://localhost:${config.port}/health`);
+      logger.info(`Server running on port ${config.port}`);
+      logger.info(`Environment: ${config.nodeEnv}`);
+      logger.info(`Health: http://localhost:${config.port}/health`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

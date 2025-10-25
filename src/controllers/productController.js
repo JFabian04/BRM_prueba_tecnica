@@ -61,7 +61,6 @@ export const getProductById = async (req, res, next) => {
  */
 export const createProduct = async (req, res, next) => {
   try {
-    console.log('DATA: ', req.body)
     const productData = {
       batchNumber: req.body.batchNumber,
       name: req.body.name,
@@ -128,7 +127,8 @@ export const createProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
-    // Delete uploaded files in case of failure
+    console.error('Error in createProduct:', error);
+    // Eliminar archivos subidos en caso de error
     if (req.files) {
       req.files.forEach(file => {
         fs.unlink(file.path, (err) => {
@@ -202,19 +202,35 @@ export const updateProduct = async (req, res, next) => {
       }
     }
 
-    // Parse IDs of images to delete
+    // IDs de imágenes a eliminar
     let imagesToDelete = [];
     if (req.body.deleteImages) {
-      const raw = req.body.deleteImages;
+      console.log('Type of req.body.deleteImages:', typeof req.body.deleteImages);
+      let raw = req.body.deleteImages;
+      console.log('Initial raw:', raw);
+      if (typeof raw === 'string') {
+        console.log('raw is a string');
+        try {
+          // Try to parse as JSON first
+          raw = JSON.parse(raw);
+          console.log('raw after JSON.parse:', raw);
+        } catch (e) {
+          // Not a JSON string, assume comma-separated
+          console.log('JSON.parse failed, assuming comma-separated');
+          raw = raw.split(',').map(s => s.trim());
+          console.log('raw after split:', raw);
+        }
+      }
+      console.log('Is raw an array?', Array.isArray(raw));
       if (Array.isArray(raw)) {
         imagesToDelete = raw.map(Number).filter(id => !isNaN(id));
-      } else if (typeof raw === 'string') {
-        imagesToDelete = raw.split(',').map(Number).filter(id => !isNaN(id));
       }
     }
 
-    // ID of existing image to set as main
+    // ID de la nueva imagen principal (si se quiere establecer una imagen existente)
     const mainImageId = req.body.mainImageId ? parseInt(req.body.mainImageId) : undefined;
+
+    console.log('imagesToDelete just before service call:', imagesToDelete);
 
     const product = await productService.updateProduct(req.params.id, {
       productData,

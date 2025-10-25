@@ -1,14 +1,17 @@
 import ProductImage from '../models/ProductImage.js';
 import { sequelize } from '../config/database.js';
 import { Sequelize } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
 
 class ProductImageRepository {
+    // Create a new product image and handle main image logic within a transaction
     async create(productId, imageData) {
         const transaction = await sequelize.transaction();
         
         try {
             if (imageData.isMainImage) {
-                // Si la nueva imagen será principal, actualizar las demás a no principales
+                // If the new image is set as main, unset main flag for others
                 await ProductImage.update(
                     { isMainImage: false },
                     { 
@@ -35,12 +38,8 @@ class ProductImageRepository {
         }
     }
 
+    // Get all images for a given product, ordered by main and creation date
     async findByProductId(productId) {
-        // Order explicitly by DB column names to avoid Sequelize mapping issues
-        // (the model maps `isMainImage` -> `is_main_image` and `createdAt` -> `created_at`).
-        // Use raw column names (without forcing a table prefix) via literals so
-        // the ORDER BY matches the actual columns present in the query regardless
-        // of the table alias Sequelize uses at runtime.
         return await ProductImage.findAll({
             where: { productId },
             order: [
@@ -50,6 +49,7 @@ class ProductImageRepository {
         });
     }
 
+    // Get the main image for a specific product
     async getMainImage(productId) {
         return await ProductImage.findOne({
             where: { 
@@ -59,11 +59,12 @@ class ProductImageRepository {
         });
     }
 
+    // Set a specific image as main for a given product
     async setMainImage(imageId, productId) {
         const transaction = await sequelize.transaction();
         
         try {
-            // Primero quitar el flag de principal de todas las imágenes del producto
+            // Remove main flag from all images of the product
             await ProductImage.update(
                 { isMainImage: false },
                 { 
@@ -72,7 +73,7 @@ class ProductImageRepository {
                 }
             );
 
-            // Establecer la nueva imagen principal
+            // Set the selected image as main
             await ProductImage.update(
                 { isMainImage: true },
                 { 
@@ -88,7 +89,9 @@ class ProductImageRepository {
         }
     }
 
+    // Delete an image (DB record + physical file) and update main image if needed
     async delete(imageId, productId) {
+        console.log(`Attempting to delete image with ID: ${imageId} for product ID: ${productId}`);
         const image = await ProductImage.findOne({
             where: { 
                 id: imageId,
@@ -96,15 +99,27 @@ class ProductImageRepository {
             }
         });
 
+        console.log('Found image to delete:', image ? image.toJSON() : null);
+
         if (!image) {
-            throw new Error('Image not found');
+            console.warn(`Image with ID ${imageId} not found for product ${productId}. Skipping.`);
+            return false;
         }
 
+        const filename = image.filename;
         const wasMain = image.isMainImage;
         await image.destroy();
 
+        // Delete the physical file
+        const filePath = path.join('uploads', filename);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(`Error deleting physical file: ${filePath}`, err);
+            }
+        });
+
+        // If deleted image was main, set another one as main
         if (wasMain) {
-            // Si era la imagen principal, establecer otra imagen como principal
             const nextImage = await ProductImage.findOne({
                 where: { productId }
             });
