@@ -1,0 +1,7 @@
+{
+  "name": "Inventory API",
+  "version": "1.0.0",
+  "description": "API REST para la gestión de un inventario, compras y usuarios.",
+  "title": "Documentación de Inventory API",
+  "url" : "http://localhost:3000"
+}

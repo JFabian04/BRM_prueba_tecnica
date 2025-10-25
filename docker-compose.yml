@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: inventory_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: inventory_db
+      MYSQL_USER: inventory_user
+      MYSQL_PASSWORD: inventory_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - inventory_network
+    healthcheck:
+      test: ["CMD", "mysql", "-u", "root", "-proot123", "-e", "SELECT 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  api:
+    build: .
+    container_name: inventory_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: inventory_db
+      DB_USER: inventory_user
+      DB_PASSWORD: inventory_pass
+      JWT_SECRET: tu_secreto_jwt_cambiar_en_produccion_2024
+      JWT_EXPIRES_IN: 24h
+      PORT: 3000
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+      - ./docs:/app/docs
+      - ./uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - inventory_network
+
+volumes:
+  mysql_data:
+
+networks:
+  inventory_network:
+    driver: bridge
